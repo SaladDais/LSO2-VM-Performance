@@ -419,9 +419,9 @@ if [ \( $WANTS_VERSION -eq $TRUE \) -o \( $WANTS_CONFIG -eq $TRUE \) ] ; then
     fi
     export revision=${buildVer}
 
-    majorVer=`cat indra/newview/VIEWER_VERSION.txt | cut -d "." -f 1`
-    minorVer=`cat indra/newview/VIEWER_VERSION.txt | cut -d "." -f 2`
-    patchVer=`cat indra/newview/VIEWER_VERSION.txt | cut -d "." -f 3`
+    majorVer="1"
+    minorVer="0"
+    patchVer="0"
     gitHash=`git describe --always --exclude '*'`
     echo "Channel : ${CHANNEL}"
     echo "Version : ${majorVer}.${minorVer}.${patchVer}.${buildVer} [${gitHash}]"
