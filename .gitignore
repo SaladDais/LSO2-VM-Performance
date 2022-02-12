@@ -92,6 +92,7 @@ indra/newview/filters.xml
 indra/newview/avatar_icons_cache.txt
 indra/newview/avatar_lad.log
 *.diff
+callgrind.out.*
 indra/newview/pilot.txt
 indra/newview/pilot.xml
 #*.rej

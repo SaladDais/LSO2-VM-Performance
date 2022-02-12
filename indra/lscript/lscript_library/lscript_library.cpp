@@ -55,6 +55,41 @@ void dummy_func(LLScriptLibData *retval, LLScriptLibData *args, const LLUUID &id
 {
 }
 
+void substring_func(LLScriptLibData *retval, LLScriptLibData *args, const LLUUID &id)
+{
+	const char* strVal = args[0].mString;
+	int startIdx = args[1].mInteger;
+	int endIdx = args[2].mInteger;
+	try
+	{
+		// not even close to the same semantics as LSL's substring stuff, but okay-ish for testing.
+		retval->mString = strdup(std::string(strVal).substr(startIdx, endIdx - startIdx + 1).c_str());
+	} catch (...)
+	{
+		// return nothing, must have been an index issue?
+	}
+}
+
+void strlen_func(LLScriptLibData *retval, LLScriptLibData *args, const LLUUID &id)
+{
+	retval->mInteger = (S32)strlen(args[0].mString);
+}
+
+void sdassert_func(LLScriptLibData *retval, LLScriptLibData *args, const LLUUID &id)
+{
+	if (!args[0].mInteger)
+	{
+		// library functions don't have the ability to set faults directly, so use this
+		// as an indicator that the assert failed.
+		retval->mType = LST_UNDEFINED;
+	}
+}
+
+void fabs_func(LLScriptLibData *retval, LLScriptLibData *args, const LLUUID &id)
+{
+	retval->mFP = fabs(args[0].mFP);
+}
+
 void LLScriptLibrary::init()
 {
 	// IF YOU ADD NEW SCRIPT CALLS, YOU MUST PUT THEM AT THE END OF THIS LIST.
@@ -69,7 +104,7 @@ void LLScriptLibrary::init()
 	addFunction(10.f, 0.f, dummy_func, "llSqrt", "f", "f");
 	addFunction(10.f, 0.f, dummy_func, "llPow", "f", "ff");
 	addFunction(10.f, 0.f, dummy_func, "llAbs", "i", "i");
-	addFunction(10.f, 0.f, dummy_func, "llFabs", "f", "f");
+	addFunction(10.f, 0.f, fabs_func, "llFabs", "f", "f");
 	addFunction(10.f, 0.f, dummy_func, "llFrand", "f", "f");
 	addFunction(10.f, 0.f, dummy_func, "llFloor", "i", "f");
 	addFunction(10.f, 0.f, dummy_func, "llCeil", "i", "f");
@@ -156,7 +191,7 @@ void LLScriptLibrary::init()
 	addFunction(10.f, 0.f, dummy_func, "llTriggerSound", NULL, "sf");
 	addFunction(10.f, 0.f, dummy_func, "llStopSound", NULL, "");
 	addFunction(10.f, 1.f, dummy_func, "llPreloadSound", NULL, "s");
-	addFunction(10.f, 0.f, dummy_func, "llGetSubString", "s", "sii");
+	addFunction(10.f, 0.f, substring_func, "llGetSubString", "s", "sii");
 	addFunction(10.f, 0.f, dummy_func, "llDeleteSubString", "s", "sii");
 	addFunction(10.f, 0.f, dummy_func, "llInsertString", "s", "sis");
 	addFunction(10.f, 0.f, dummy_func, "llToUpper", "s", "s");
@@ -190,7 +225,7 @@ void LLScriptLibrary::init()
 	addFunction(10.f, 0.f, dummy_func, "llMinEventDelay", NULL, "f");
 	addFunction(10.f, 0.f, dummy_func, "llSoundPreload", NULL, "s");
 	addFunction(10.f, 0.f, dummy_func, "llRotLookAt", NULL, "qff");
-	addFunction(10.f, 0.f, dummy_func, "llStringLength", "i", "s");
+	addFunction(10.f, 0.f, strlen_func, "llStringLength", "i", "s");
 	addFunction(10.f, 0.f, dummy_func, "llStartAnimation", NULL, "s");
 	addFunction(10.f, 0.f, dummy_func, "llStopAnimation", NULL, "s");
 	addFunction(10.f, 0.f, dummy_func, "llPointAt", NULL, "v");
@@ -463,6 +498,7 @@ void LLScriptLibrary::init()
 
 	addFunction(10.f, 0.f, dummy_func, "llGetEnv", "s", "s");
 	addFunction(10.f, 0.f, dummy_func, "llRegionSayTo", NULL, "kis");
+	addFunction(10.f, 0.f, sdassert_func, "sdAssert", "i", "i");
 
 	// energy, sleep, dummy_func, name, return type, parameters, help text, gods-only
 

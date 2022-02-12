@@ -4271,6 +4271,16 @@ BOOL run_calllib_common(U8 *buffer, S32 &offset, const LLUUID &id, U16 arg)
 
 	if (returnvalue)
 	{
+		// stupid special-casing of assert function. Explicitly setting the return type
+		// to undefined indicates an error. this would be much nicer as something
+		// like print() where it's a separate kind of statement, but I don't feel like
+		// mucking with the parser. Not for production!
+		if (returnvalue->mType == LST_UNDEFINED && !strcmp("sdAssert", function.mName))
+		{
+			LL_WARNS("LSL") << "Assertion failed" << LL_ENDL;
+			set_fault(buffer, LSRF_CLI);
+		}
+
 		returnvalue->mType = char2type(*function.mReturnType);
 		lscript_push_return_variable(returnvalue, buffer);
 	}

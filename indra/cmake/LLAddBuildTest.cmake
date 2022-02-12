@@ -212,6 +212,7 @@ FUNCTION(LL_ADD_INTEGRATION_TEST
     ${BOOST_SYSTEM_LIBRARY}
     ${GOOGLEMOCK_LIBRARIES}
     ${PTHREAD_LIBRARY}
+    ${DL_LIBRARY}
     )
 
   # Add test executable build target

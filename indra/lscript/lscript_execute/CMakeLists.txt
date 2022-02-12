@@ -41,3 +41,22 @@ set_source_files_properties(${lscript_execute_HEADER_FILES}
 list(APPEND lscript_execute_SOURCE_FILES ${lscript_execute_HEADER_FILES})
 
 add_library (lscript_execute ${lscript_execute_SOURCE_FILES})
+
+# Have a flag to run lscript tests without all the other tests
+# There's a bunch of broken tests I don't feel like fixing, and I don't think anybody
+# actually runs them anyway.
+if (LL_TESTS OR LSCRIPT_TESTS)
+    message(WARNING "${CMAKE_CURRENT_BINARY_DIR}")
+    add_custom_command( TARGET lscript_execute PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests" "${CMAKE_CURRENT_BINARY_DIR}/tests"
+            COMMENT "Copying lscript_execute test files"
+            )
+    set(test_libs
+            ${LSCRIPT_LIBRARIES}
+            ${WINDOWS_LIBRARIES}
+            ${LLMATH_LIBRARIES}
+            ${LLCOMMON_LIBRARIES}
+            )
+    LL_ADD_INTEGRATION_TEST(lscript_execute_state "" "${test_libs}")
+endif (LL_TESTS OR LSCRIPT_TESTS)
