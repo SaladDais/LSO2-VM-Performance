@@ -60,7 +60,6 @@ if(WINDOWS)
         libeay32.dll
         nghttp2.dll
         glod.dll
-        libhunspell.dll
         uriparser.dll
         )
 
@@ -84,15 +83,6 @@ if(WINDOWS)
       endif(ADDRESS_SIZE EQUAL 32)
     endif (BUGSPLAT_DB)
 
-    set(release_files ${release_files} growl++.dll growl.dll )
-    if (FMODSTUDIO)
-      set(debug_files ${debug_files} fmodL.dll)
-      set(release_files ${release_files} fmod.dll)
-    endif (FMODSTUDIO)
-
-    if (OPENAL)
-        list(APPEND release_files openal32.dll alut.dll)
-    endif (OPENAL)
 
     #*******************************
     # Copy MS C runtime dlls, required for packaging.
@@ -193,7 +183,6 @@ elseif(DARWIN)
         libexception_handler.dylib
         ${EXPAT_COPY}
         libGLOD.dylib
-        libhunspell-1.3.0.dylib
         libndofdev.dylib
         libnghttp2.dylib
         libnghttp2.14.dylib
@@ -201,14 +190,7 @@ elseif(DARWIN)
         liburiparser.dylib
         liburiparser.1.dylib
         liburiparser.1.0.27.dylib
-        libgrowl.dylib
-        libgrowl++.dylib
        )
-
-    if (FMODSTUDIO)
-      set(debug_files ${debug_files} libfmodL.dylib)
-      set(release_files ${release_files} libfmod.dylib)
-    endif (FMODSTUDIO)
 
 elseif(LINUX)
     # linux is weird, multiple side by side configurations aren't supported
@@ -249,13 +231,7 @@ elseif(LINUX)
         #libGLOD.so
         libgmodule-2.0.so
         libgobject-2.0.so
-        libhunspell-1.3.so.0.0.0
-        libopenal.so
         #libopenjpeg.so
-        libuuid.so.16
-        libuuid.so.16.0.22
-        libfontconfig.so.1.8.0
-        libfontconfig.so.1
        )
     else (NOT USESYSTEMLIBS)
       set(release_files
@@ -263,10 +239,6 @@ elseif(LINUX)
        )
     endif (NOT USESYSTEMLIBS)
 
-    if (FMODSTUDIO)
-      set(debug_files ${debug_files} "libfmodL.so")
-      set(release_files ${release_files} "libfmod.so")
-    endif (FMODSTUDIO)
 
 else(WINDOWS)
     message(STATUS "WARNING: unrecognized platform for staging 3rd party libs, skipping...")
@@ -293,22 +265,8 @@ endif(WINDOWS)
 # Done building the file lists, now set up the copy commands.
 ################################################################
 
-# Curiously, slvoice_files are only copied to SHARED_LIB_STAGING_DIR_RELEASE.
-# It's unclear whether this is oversight or intentional, but anyway leave the
-# single copy_if_different command rather than using to_staging_dirs.
-copy_if_different(
-    ${slvoice_src_dir}
-    "${SHARED_LIB_STAGING_DIR_RELEASE}"
-    out_targets
-    ${slvoice_files}
-    )
-list(APPEND third_party_targets ${out_targets})
 
-to_staging_dirs(
-    ${vivox_lib_dir}
-    third_party_targets
-    ${vivox_libs}
-    )
+list(APPEND third_party_targets ${out_targets})
 
 to_staging_dirs(
     ${release_src_dir}
