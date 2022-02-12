@@ -18,6 +18,7 @@ add_subdirectory(lscript_compile)
 add_subdirectory(lscript_execute)
 
 add_subdirectory(lscript_library)
+add_subdirectory(lscript_harness)
 
 file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/viewer_version.txt"
            "1.0\n")
