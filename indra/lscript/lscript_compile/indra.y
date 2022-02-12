@@ -1782,7 +1782,7 @@ lvalue
 		LLScriptIdentifier	*id = new LLScriptIdentifier(gLine, gColumn, $1);	
 		gAllocationManager->addAllocation(id);
 		LLScriptIdentifier	*ac = new LLScriptIdentifier(gLine, gColumn, $3);	
-		gAllocationManager->addAllocation(id);
+		gAllocationManager->addAllocation(ac);
 		$$ = new LLScriptLValue(gLine, gColumn, id, ac);
 		gAllocationManager->addAllocation($$);
 	}
