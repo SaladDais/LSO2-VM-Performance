@@ -318,13 +318,57 @@ S32 lscript_push_variable(LLScriptLibData *data, U8 *buffer);
 void LLScriptExecuteLSL2::resumeEventHandler(BOOL b_print, const LLUUID &id, F32 time_slice)
 {
 	//	call opcode run function pointer with buffer and IP
-	mInstructionCount++;
-	S32 value = get_register(mBuffer, LREG_IP);
-	S32 tvalue = value;
-	S32	opcode = safe_instruction_bytestream2byte(mBuffer, tvalue);
-	mExecuteFuncs[opcode](mBuffer, value, b_print, id);
-	set_ip(mBuffer, value);
-	add_register_fp(mBuffer, LREG_ESR, -0.1f);
+	S32 cur_ip = get_register(mBuffer, LREG_IP);
+	S32 start_ip = cur_ip;
+
+	// try to stay in a hot interpretation loop as much as we can
+	while (cur_ip != 0) {
+		// so we can tell if we jumped backwards
+		S32 start_ip = cur_ip;
+		// temp var because bytestream2byte mutates passed-in ref.
+		S32 tvalue = start_ip;
+		U8 opcode = safe_instruction_bytestream2byte(mBuffer, tvalue);
+		mInstructionCount++;
+		mExecuteFuncs[opcode](mBuffer, cur_ip, b_print, id);
+		add_register_fp(mBuffer, LREG_ESR, -0.1f);
+
+		// post-checks to see if we did something that might require a yield
+		// or script termination. These would be faster if we just put them in the
+		// branch for a given opcode.
+		switch(opcode) {
+			// We only need to do a yield check on _backwards_ jumps
+			// per mono behavior, these may just be jumps for branching.
+			case LOPC_JUMP:
+			case LOPC_JUMPNIF:
+			case LOPC_JUMPIF:
+				if (start_ip >= cur_ip) {
+					goto interp_interrupt;
+				}
+				break;
+			// calling library functions may set flags we have to consider,
+			// changing state definitely will. Again, would be faster if we
+			// could mark library calls that are known to have side-effects
+			// we need to consider.
+			case LOPC_CALLLIB_TWO_BYTE:
+			case LOPC_CALLLIB:
+			case LOPC_STATE:
+			// need to yield check on these because otherwise people can make unrolled
+			// loops via function calls that can't be yielded between.
+			case LOPC_CALL:
+			case LOPC_RETURN:
+				goto interp_interrupt;
+				break;
+		}
+		// All faults trigger an interrupt.
+		if (get_register(mBuffer, LREG_FR))
+			break;
+	}
+	interp_interrupt:;
+
+	// Set the IP register to match the last instruction we executed.
+	// Not updated in the loop because nothing should access IP other than
+	// us and our (in)direct callers.
+	set_ip(mBuffer, cur_ip);
 	//	lsa_print_heap(mBuffer);
 
 	if (b_print)
