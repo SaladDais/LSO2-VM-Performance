@@ -289,6 +289,14 @@ void LLScriptExecuteLSL2::init()
 	// have to be careful to do this again before serializing mBuffer to disk!
 	swap_register_endianness(mBuffer);
 #endif
+
+	//  is there a fault?
+	//	if yes, print out message and exit
+	S32 value = getVersion();
+	if ( (value != LSL2_VERSION1_END_NUMBER) && (value != LSL2_VERSION_NUMBER) )
+	{
+		setFault(LSRF_VERSION_MISMATCH);
+	}
 }
 
 
@@ -872,14 +880,7 @@ void LLScriptExecute::runInstructions(BOOL b_print, const LLUUID &id,
 									 U32& events_processed,
 									 F32 quanta)
 {
-	//  is there a fault?
-	//	if yes, print out message and exit
-	S32 value = getVersion();
-	if ( (value != LSL2_VERSION1_END_NUMBER) && (value != LSL2_VERSION_NUMBER) )
-	{
-		setFault(LSRF_VERSION_MISMATCH);
-	}
-	value = getFaults();
+	S32 value = getFaults();
 	if (value > LSRF_INVALID && value < LSRF_EOF)
 	{
 		if (b_print)
