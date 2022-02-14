@@ -302,18 +302,21 @@ inline void quaternion2bytestream(U8 *stream, S32 &offset, const LLQuaternion &q
 inline S32 get_register(const U8 *stream, LSCRIPTRegisters reg)
 {
 	S32 offset = gLSCRIPTRegisterAddresses[reg];
-	return bytestream2integer(stream, offset);
+	return *(S32 *)(stream + offset);
 }
 
 inline F32 get_register_fp(U8 *stream, LSCRIPTRegisters reg)
 {
 	S32 offset = gLSCRIPTRegisterAddresses[reg];
-	F32 value = bytestream2float(stream, offset);
+	F32 value = *(F32 *)(stream + offset);
+	// SD: Can this even happen? Do we really care if it does?
+	/*
 	if (!llfinite(value))
 	{
 		value = 0;
 		set_fault(stream, LSRF_MATH);
 	}
+	*/
 	return value;
 }
 inline U64 get_register_u64(U8 *stream, LSCRIPTRegisters reg)
@@ -344,13 +347,26 @@ inline U64 get_event_register(U8 *stream, LSCRIPTRegisters reg, S32 major_versio
 inline void set_register(U8 *stream, LSCRIPTRegisters reg, S32 value)
 {
 	S32 offset = gLSCRIPTRegisterAddresses[reg];
-	integer2bytestream(stream, offset, value);
+	*(S32 *)(stream + offset) = value;
 }
 
 inline void set_register_fp(U8 *stream, LSCRIPTRegisters reg, F32 value)
 {
 	S32 offset = gLSCRIPTRegisterAddresses[reg];
-	float2bytestream(stream, offset, value);
+	*(F32 *)(stream + offset) = value;
+}
+
+inline void swap_register_endianness(U8 *buffer)
+{
+	for(size_t offset=0; offset<=gLSCRIPTRegisterAddresses[LREG_SR]; offset+=4)
+	{
+		U8 *stream = buffer + offset;
+		U32 integer = *(U32 *)stream;
+		*(stream)	= (integer >> 24);
+		*(stream + 1)	= (integer >> 16) & 0xff;
+		*(stream + 2)	= (integer >> 8) & 0xff;
+		*(stream + 3)	= (integer) & 0xff;
+	}
 }
 
 inline void set_register_u64(U8 *stream, LSCRIPTRegisters reg, U64 value)
@@ -381,16 +397,16 @@ inline void set_event_register(U8 *stream, LSCRIPTRegisters reg, U64 value, S32 
 
 inline F32 add_register_fp(U8 *stream, LSCRIPTRegisters reg, F32 value)
 {
-	S32 offset = gLSCRIPTRegisterAddresses[reg];
-	F32 newvalue = bytestream2float(stream, offset);
-	newvalue += value;
+	F32 newvalue = get_register_fp(stream, reg) + value;
+	// SD: Can this even happen? Do we really care if it does?
+	/*
 	if (!llfinite(newvalue))
 	{
 		newvalue = 0;
 		set_fault(stream, LSRF_MATH);
 	}
-	offset = gLSCRIPTRegisterAddresses[reg];
-	float2bytestream(stream, offset, newvalue);
+	*/
+	set_register_fp(stream, reg, newvalue);
 	return newvalue;
 }
 

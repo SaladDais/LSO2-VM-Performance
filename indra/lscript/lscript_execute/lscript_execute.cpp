@@ -285,6 +285,10 @@ void LLScriptExecuteLSL2::init()
 	unary_operations[LST_VECTOR] = vector_operation;
 	unary_operations[LST_QUATERNION] = quaternion_operation;
 
+#ifndef LL_BIG_ENDIAN
+	// have to be careful to do this again before serializing mBuffer to disk!
+	swap_register_endianness(mBuffer);
+#endif
 }
 
 
@@ -675,6 +679,14 @@ S32 LLScriptExecuteLSL2::writeState(U8 **dest, U32 header_size, U32 footer_size)
 	// LL_INFOS() << "Writing CE: " << getCurrentEvents() << LL_ENDL;
 	bytestream2bytestream(*dest, dest_offset, mBuffer, src_offset, registers_size);
 
+#ifndef LL_BIG_ENDIAN
+	// skip past the registers size field when swapping register endianness
+	// the actual size of the registers can be ignored since we only care about
+	// the 32-bit int and float registers closest to the start. 64-bit registers
+	// are left alone.
+	swap_register_endianness(*dest + header_size + sizeof(S32));
+#endif
+
 	// heap
 	integer2bytestream(*dest, dest_offset, heap_size);
 
@@ -705,6 +717,10 @@ S32 LLScriptExecuteLSL2::writeBytecode(U8 **dest)
 
 	bytestream2bytestream(*dest, dest_offset, mBuffer, src_offset, total_size);
 
+#ifndef LL_BIG_ENDIAN
+	swap_register_endianness(*dest);
+#endif
+
 	return total_size;
 }
 
@@ -724,6 +740,9 @@ S32 LLScriptExecuteLSL2::readState(U8 *src)
 
 	// copy data into register area
 	bytestream2bytestream(mBuffer, dest_offset, src, src_offset, size);
+#ifndef LL_BIG_ENDIAN
+	swap_register_endianness(mBuffer);
+#endif
 //	LL_INFOS() << "Read CE: " << getCurrentEvents() << LL_ENDL;
 	if (get_register(mBuffer, LREG_TM) != TOP_OF_MEMORY)
 	{

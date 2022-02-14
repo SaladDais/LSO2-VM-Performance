@@ -302,6 +302,9 @@ void LLScriptScriptCodeChunk::build(LLFILE *efp, LLFILE *bcfp)
 		set_register(mCompleteCode, LREG_PR, 0);
 		set_register(mCompleteCode, LREG_TM, mTotalSize);
 
+#ifndef LL_BIG_ENDIAN
+		swap_register_endianness(mCompleteCode);
+#endif
 
 		if (fwrite(mCompleteCode, 1, mTotalSize, bcfp) != (size_t)mTotalSize)
 		{
