@@ -492,7 +492,7 @@ public:
 	virtual void setEventHandlers(U64 value) {set_event_register(mBuffer, LREG_ER, value, getMajorVersion());}
 	virtual U64 getCurrentHandler();
 	virtual void setCurrentHandler(U64 value) {return set_event_register(mBuffer, LREG_IE, value, getMajorVersion());}	
-	virtual BOOL isFinished() const {return get_register(mBuffer, LREG_IP) == 0;}
+	virtual BOOL isFinished() const {return get_register(mBuffer, LREG_IP) == 0 || get_register(mBuffer, LREG_FR);}
 	virtual BOOL isStateChangePending() const {return get_register(mBuffer, LREG_CS) != get_register(mBuffer, LREG_NS);}
 	virtual S32 writeState(U8 **dest, U32 header_size, U32 footer_size); // Not including Events.
 	virtual U32 getEventsSavedSize() {return mEventData.getSavedSize();}
