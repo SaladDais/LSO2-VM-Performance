@@ -74,6 +74,21 @@ namespace tut
 	template<> template<>
 	void lscript_execute_t::test<2>()
 	{
+		std::unique_ptr<LLScriptExecuteLSL2> execute(loadScript("tests/lsl_conformance2.lsl"));
+		F32 time_slice = 3600.0f; // 1 hr.
+		U32 events_processed = 0;
+		do {
+			const char *error;
+			LLTimer timer;
+			execute->runQuanta(FALSE, LLUUID::null, &error,
+							   time_slice, events_processed, timer);
+		} while (!execute->isFinished());
+		ensure(!execute->getFaults());
+	}
+
+	template<> template<>
+	void lscript_execute_t::test<3>()
+	{
 		std::unique_ptr<LLScriptExecuteLSL2> execute(loadScript("tests/lsl_conformance.lsl"));
 		F32 time_slice = 3600.0f; // 1 hr.
 		U32 events_processed = 0;

@@ -117,7 +117,8 @@ ensureRotationEqual(string description, rotation actual, rotation expected)
 
 ensureListEqual(string description, list actual, list expected)
 {
-    if(actual == expected)
+    // equal in length and actual contains expected (== is just length comparison)
+    if(actual == expected && ((string)actual == (string)expected))
     {
         testPassed(description, (string) actual, (string) expected);
     }
@@ -133,6 +134,12 @@ string gString = "foo";
 vector gVector = <1, 2, 3>;
 rotation gRot = <1, 2, 3, 4>;
 list gList = [1, 2, 3];
+list gCallOrder;
+
+integer callOrderFunc(integer num) {
+    gCallOrder += [num];
+    return 1;
+}
 
 integer testReturn()
 {
@@ -485,21 +492,21 @@ tests()
 
     // post increment.
     i = 1;
-    ensureIntegerEqual("i = 1; (i == 2) && (i++ == 1)", (i == 2) && (i++ == 1), TRUE);
+    ensureIntegerEqual("postinc", (i == 2) && (i++ == 1), TRUE);
 
     // pre increment.
     i = 1;
-    ensureIntegerEqual("i = 1; (i == 2) && (++i == 2)", (i == 2) && (++i == 2), TRUE);
+    ensureIntegerEqual("preinc", (i == 2) && (++i == 2), TRUE);
 
     // post decrement.
     i = 2;
-    ensureIntegerEqual("i = 2; (i == 1) && (i-- == 2)", (i == 1) && (i-- == 2), TRUE);
+    ensureIntegerEqual("postdec", (i == 1) && (i-- == 2), TRUE);
 
     // pre decrement.
     i = 2;
-    ensureIntegerEqual("i = 2; (i == 1) && (--i == 1)", (i == 1) && (--i == 1), TRUE);
+    ensureIntegerEqual("predec1", (i == 1) && (--i == 1), TRUE);
     i = 2; --i;
-    ensureIntegerEqual("i = 2; --i", i, 1);
+    ensureIntegerEqual("predec2", i, 1);
 
     // casting
     ensureFloatEqual("((float)2)", ((float)2), 2.0);
@@ -535,7 +542,7 @@ tests()
     llSetText("Error", <1,0,0>, 1); // Inserting this library call causes a save point to be added.
     i = 2;
     @SkipAssign;
-    ensureIntegerEqual("i = 1; jump SkipAssign; i = 2; @SkipAssign;", i, 1);
+    ensureIntegerEqual("assignjump", i, 1);
 
     // return
     ensureIntegerEqual("testReturn()", testReturn(), 1);
@@ -544,8 +551,8 @@ tests()
     ensureVectorEqual("testReturnVector()", testReturnVector(), <1,2,3>);
     ensureRotationEqual("testReturnRotation()", testReturnRotation(), <1,2,3,4>);
     ensureVectorEqual("testReturnVectorNested()", testReturnVectorNested(), <1,2,3>);
-    ensureVectorEqual("testReturnVectorWithLibraryCall()", testReturnVectorWithLibraryCall(), <1,2,3>);
-    ensureRotationEqual("testReturnRotationWithLibraryCall()", testReturnRotationWithLibraryCall(), <1,2,3,4>);
+    ensureVectorEqual("libveccall", testReturnVectorWithLibraryCall(), <1,2,3>);
+    ensureRotationEqual("librotcall", testReturnRotationWithLibraryCall(), <1,2,3,4>);
 
     // parameters
     ensureIntegerEqual("testParameters(1)", testParameters(1), 2);
@@ -613,19 +620,23 @@ tests()
     // list equality
     list l = (list) 5;
     list l2 = (list) 5;
-    ensureListEqual("list l = (list) 5; list l2 = (list) 5", l, l2);
-    ensureListEqual("list l = (list) 5", l, [5]);
-    ensureListEqual("[1.5, 6, <1,2,3>, <1,2,3,4>]", [1.5, 6, <1,2,3>, <1,2,3,4>], [1.5, 6, <1,2,3>, <1,2,3,4>]);
+    ensureListEqual("leq1", l, l2);
+    ensureListEqual("leq2", l, [5]);
+    ensureListEqual("leq3", [1.5, 6, <1,2,3>, <1,2,3,4>], [1.5, 6, <1,2,3>, <1,2,3,4>]);
 
     // String escaping
-    ensureIntegerEqual("llStringLength(\"\\\") == 1", llStringLength("\\"), 1);
-    ensureIntegerEqual("llStringLength(\"\\t\") == 4", llStringLength("\t"), 4);
-    ensureIntegerEqual("llStringLength(\"\\n\") == 1", llStringLength("\n"), 1);
-    ensureIntegerEqual("llStringLength(\"\\\"\") == 1", llStringLength("\""), 1);
+    ensureIntegerEqual("sesc1", llStringLength("\\"), 1);
+    ensureIntegerEqual("sesc2", llStringLength("\t"), 4);
+    ensureIntegerEqual("sesc3", llStringLength("\n"), 1);
+    ensureIntegerEqual("sesc4", llStringLength("\""), 1);
 
     // Nested expression lists
     ensureStringEqual("testExpressionLists([testExpressionLists([]), \"bar\"]) == \"foofoobar\"", testExpressionLists([testExpressionLists([]), "bar"]), "foofoobar");
 
+    // Order of expression evaluation, no short circuiting in `if`.
+    if (TRUE || callOrderFunc(0) * callOrderFunc(1) && callOrderFunc(2) | callOrderFunc(3) ^ callOrderFunc(4) / callOrderFunc(5) || TRUE)
+        ;
+    ensureListEqual("gCallOrder expected order", gCallOrder, [5,4,3,2,1,0]);
 }
 
 runTests()
@@ -641,6 +652,7 @@ runTests()
     gList = [1, 2, 3];
     gTestsPassed = 0;
     gTestsFailed = 0;
+    gCallOrder = [];
 }
 
 default

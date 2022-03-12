@@ -4122,6 +4122,7 @@ void lscript_run(const std::string& filename, BOOL b_debug)
 		printf("bp: 0x%X\n", get_register(execute->mBuffer, LREG_BP));
 		printf("hr: 0x%X\n", get_register(execute->mBuffer, LREG_HR));
 		printf("hp: 0x%X\n", get_register(execute->mBuffer, LREG_HP));
+		printf("faults %d\n", execute->getFaults());
 		delete execute;
 	}
 }
