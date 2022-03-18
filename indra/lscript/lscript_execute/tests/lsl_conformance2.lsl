@@ -220,6 +220,13 @@ tests()
     ensureStringEqual("Vector references not shared1", (string)veclist, "<1.000000, 2.000000, 3.000000>");
     // what? decimal place difference in precision between the two casts?
     ensureStringEqual("Vector references not shared2", (string)vectest, "<2.00000, 2.00000, 3.00000>");
+
+    vector v;
+    ensureVectorEqual("vec incr last postincr", (v * v.x++), <0, 0, 0>);
+    ensureVectorEqual("vec incr last preincr", (v * ++v.x), <4, 0, 0>);
+    v = ZERO_VECTOR;
+    ensureVectorEqual("vec incr first postincr", (v.x++ * v), <0, 0, 0>);
+    ensureVectorEqual("vec incr first preincr", (++v.x * v), <2, 0, 0>);
 }
 
 runTests()
